@@ -1,0 +1,15 @@
+#ifndef APP_EVENTS_H
+#define APP_EVENTS_H
+typedef enum {
+    APP_EVT_NONE = 0,
+    APP_EVT_BOOT_DONE,
+    APP_EVT_WIFI_CONNECTED,
+    APP_EVT_WIFI_DISCONNECTED,
+    APP_EVT_WAKE_WORD,
+    APP_EVT_TOUCH,
+    APP_EVT_ASR_DONE,
+    APP_EVT_LLM_DONE,
+    APP_EVT_TTS_DONE,
+    APP_EVT_TIMEOUT,
+} app_event_t;
+#endif
