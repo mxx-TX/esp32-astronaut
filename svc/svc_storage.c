@@ -1,12 +1,11 @@
 #include "svc_storage.h"
 #include "nvs_flash.h"
-#include "esp_log.h"
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
-static const char *TAG = "svc_storage";
 static nvs_handle_t s_nvs;
 static bool s_nvs_ok = false;
+
 esp_err_t svc_storage_nvs_set_str(const char *key, const char *val)
 {
     if (!s_nvs_ok) { nvs_open("vocat", NVS_READWRITE, &s_nvs); s_nvs_ok = true; }
@@ -38,3 +37,21 @@ bool svc_storage_sd_exists(const char *path)
     struct stat st;
     return (stat(path, &st) == 0);
 }
+
+static esp_err_t svc_storage_on_init(svc_base_t *svc, void *ctx)
+{
+    (void)svc; (void)ctx;
+    nvs_open("vocat", NVS_READWRITE, &s_nvs);
+    s_nvs_ok = true;
+    return ESP_OK;
+}
+
+svc_base_t g_svc_storage = {
+    .name = "storage",
+    .deps = NULL,
+    .dep_count = 0,
+    .on_init = svc_storage_on_init,
+    .on_start = NULL,
+    .on_stop = NULL,
+    .on_deinit = NULL,
+};

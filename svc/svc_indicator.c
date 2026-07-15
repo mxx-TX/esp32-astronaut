@@ -22,3 +22,13 @@ esp_err_t svc_indicator_set(svc_ind_mode_t mode)
     if (!s_task) xTaskCreate(ind_task, "ind", 2048, NULL, 1, &s_task);
     return ESP_OK;
 }
+
+svc_base_t g_svc_indicator = {
+    .name = "indicator",
+    .deps = NULL,
+    .dep_count = 0,
+    .on_init = NULL,
+    .on_start = NULL,
+    .on_stop = NULL,
+    .on_deinit = NULL,
+};
