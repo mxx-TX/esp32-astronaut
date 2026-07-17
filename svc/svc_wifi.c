@@ -1,7 +1,7 @@
 /* ================================================================
- *  WiFi 服务 - STA 连接、NVS 凭据存取、配网
- *  (Soft-AP HTTP 强制门户 + DNS 重定向)
- *  BLE 配网: 见 svc_ble.c
+ *  WiFi 鏈嶅姟 - STA 杩炴帴銆丯VS 鍑嵁瀛樺彇銆侀厤缃?
+ *  (Soft-AP HTTP 寮哄埗闂ㄦ埛 + DNS 閲嶅畾鍚?
+ *  BLE 閰嶇綉: 瑙?svc_ble.c
  * ================================================================ */
 
 #include "svc_wifi.h"
@@ -42,7 +42,7 @@ static int s_dns_sock = -1;
 static char s_prov_pin[8];
 
 /* ================================================================
- *  NVS 凭据存取
+ *  NVS 鍑嵁瀛樺彇
  * ================================================================ */
 
 static void save_creds_to_nvs(const char *ssid, const char *pass)
@@ -63,7 +63,7 @@ static bool load_creds_from_nvs(char *ssid, size_t ssid_len,
 }
 
 /* ================================================================
- *  PIN 生成
+ *  PIN 鐢熸垚
  * ================================================================ */
 
 static void generate_pin(void)
@@ -74,7 +74,7 @@ static void generate_pin(void)
 }
 
 /* ================================================================
- *  HTTP 处理器 - GET /  (配网首页)
+ *  HTTP 澶勭悊鍣?- GET /  (閰嶇綉棣栭〉)
  * ================================================================ */
 
 static esp_err_t http_get_root_handler(httpd_req_t *req)
@@ -99,7 +99,7 @@ static esp_err_t http_get_root_handler(httpd_req_t *req)
 }
 
 /* ================================================================
- *  HTTP 处理器 - 404 (强制门户兜底)
+ *  HTTP 澶勭悊鍣?- 404 (寮哄埗闂ㄦ埛鍏滃簳)
  * ================================================================ */
 
 static esp_err_t http_404_handler(httpd_req_t *req, httpd_err_code_t err)
@@ -109,7 +109,7 @@ static esp_err_t http_404_handler(httpd_req_t *req, httpd_err_code_t err)
 }
 
 /* ================================================================
- *  DNS 强制门户 (UDP :53)
+ *  DNS 寮哄埗闂ㄦ埛 (UDP :53)
  * ================================================================ */
 
 static void dns_server_task(void *arg)
@@ -172,7 +172,7 @@ static void start_dns_server(void)
 }
 
 /* ================================================================
- *  配网生命周期
+ *  閰嶇綉鐢熷懡鍛ㄦ湡
  * ================================================================ */
 
 static void provision_complete(bool success)
@@ -196,9 +196,9 @@ static void provision_complete(bool success)
 }
 
 /* ================================================================
- *  URI 路由表
- *  s_uri_connect.handler 由 setup_s_uri_connect_handler() 运行时赋值，
- *  注册本身由 register_connect_uri() 完成，无前向声明。
+ *  URI 璺敱琛?
+ *  s_uri_connect.handler 鐢?setup_s_uri_connect_handler() 杩愯鏃惰祴鍊硷紝
+ *  娉ㄥ唽鏈韩鐢?register_connect_uri() 瀹屾垚锛屾棤鍓嶅悜澹版槑銆?
  * ================================================================ */
 
 static httpd_uri_t s_uri_root = {
@@ -208,7 +208,7 @@ static httpd_uri_t s_uri_root = {
 static httpd_uri_t s_uri_connect;
 
 /* ================================================================
- *  HTTP 服务器
+ *  HTTP 鏈嶅姟鍣?
  * ================================================================ */
 
 static void start_http_server(void)
@@ -222,7 +222,7 @@ static void start_http_server(void)
 }
 
 /* ================================================================
- *  Soft-AP 管理
+ *  Soft-AP 绠＄悊
  * ================================================================ */
 
 static void start_ap(void)
@@ -257,7 +257,7 @@ static void start_ap(void)
 }
 
 /* ================================================================
- *  STA 连接尝试 (返回 bool，不自行重启 AP)
+ *  STA 杩炴帴灏濊瘯 (杩斿洖 bool锛屼笉鑷閲嶅惎 AP)
  * ================================================================ */
 
 static bool try_sta_connect(const char *ssid, const char *pass)
@@ -288,7 +288,7 @@ static bool try_sta_connect(const char *ssid, const char *pass)
 }
 
 /* ================================================================
- *  注册 /connect URI (仅注册，不设 handler)
+ *  娉ㄥ唽 /connect URI (浠呮敞鍐岋紝涓嶈 handler)
  * ================================================================ */
 
 static void register_connect_uri(void)
@@ -297,7 +297,7 @@ static void register_connect_uri(void)
 }
 
 /* ================================================================
- *  HTTP 处理器 - POST /connect (接收配网凭据)
+ *  HTTP 澶勭悊鍣?- POST /connect (鎺ユ敹閰嶇綉鍑嵁)
  * ================================================================ */
 
 static void url_decode(char *dst, const char *src, size_t dst_size)
@@ -384,7 +384,7 @@ static esp_err_t http_post_connect_handler(httpd_req_t *req)
 }
 
 /* ================================================================
- *  设置 s_uri_connect.handler (依赖 http_post_connect_handler)
+ *  璁剧疆 s_uri_connect.handler (渚濊禆 http_post_connect_handler)
  * ================================================================ */
 
 static void setup_s_uri_connect_handler(void)
@@ -395,7 +395,7 @@ static void setup_s_uri_connect_handler(void)
 }
 
 /* ================================================================
- *  BLE 凭据回调 (连接 + 失败回滚)
+ *  BLE 鍑嵁鍥炶皟 (杩炴帴 + 澶辫触鍥炴粴)
  * ================================================================ */
 
 static void ble_cred_callback(const char *ssid, const char *pass)
@@ -411,7 +411,7 @@ static void ble_cred_callback(const char *ssid, const char *pass)
 }
 
 /* ================================================================
- *  WiFi 事件处理器
+ *  WiFi 浜嬩欢澶勭悊鍣?
  * ================================================================ */
 
 static void event_handler(void *arg, esp_event_base_t base,
@@ -450,7 +450,7 @@ static void event_handler(void *arg, esp_event_base_t base,
 }
 
 /* ================================================================
- *  公开 API
+ *  鍏紑 API
  * ================================================================ */
 
 esp_err_t svc_wifi_init(void)
@@ -534,12 +534,20 @@ bool svc_wifi_is_provisioning(void)
 }
 
 /* ================================================================
- *  服务生命周期
+ *  鏈嶅姟鐢熷懡鍛ㄦ湡
  * ================================================================ */
 
+
+/* 深度睡眠前清理 */
+static void pm_deep_sleep_handler(svc_event_id_t id, void *data, void *ctx)
+{
+    (void)id; (void)data; (void)ctx;
+    esp_wifi_stop();
+}
 static esp_err_t svc_wifi_on_init(svc_base_t *svc, void *ctx)
 {
     (void)svc; (void)ctx;
+        svc_event_subscribe(EVT_PM_DEEP_SLEEP, pm_deep_sleep_handler, NULL);
     return svc_wifi_init();
 }
 

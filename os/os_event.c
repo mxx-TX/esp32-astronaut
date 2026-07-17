@@ -14,3 +14,4 @@ esp_err_t os_event_wait(os_event_handle_t handle, uint32_t bits, bool clear, boo
     EventBits_t r = xEventGroupWaitBits(handle, bits, clear ? pdTRUE : pdFALSE, wait_all ? pdTRUE : pdFALSE, pdMS_TO_TICKS(timeout_ms));
     return ((r & bits) == bits) ? ESP_OK : ESP_FAIL;
 }
+

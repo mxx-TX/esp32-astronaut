@@ -4,9 +4,16 @@
 #include "bsp_touch.h"
 #include "esp_lvgl_port.h"
 #include "esp_log.h"
+#include "framework/svc_event.h"
 
 static const char *TAG = "svc_display";
 static lv_display_t *s_disp = NULL;
+
+static void pm_deep_sleep_handler(svc_event_id_t id, void *data, void *ctx)
+{
+    (void)id; (void)data; (void)ctx;
+    bsp_lcd_set_backlight(0);
+}
 
 esp_err_t svc_display_init(esp_lcd_panel_io_handle_t io, esp_lcd_panel_handle_t panel, esp_lcd_touch_handle_t touch_dev)
 {
@@ -50,12 +57,12 @@ esp_err_t svc_display_init(esp_lcd_panel_io_handle_t io, esp_lcd_panel_handle_t 
 esp_err_t svc_display_set_backlight(uint8_t pct) 
 { 
     return bsp_lcd_set_backlight(pct); 
-
 }
 
 static esp_err_t svc_display_on_init(svc_base_t *svc, void *ctx)
 {
     bsp_handles_t *h = (bsp_handles_t *)ctx;
+    svc_event_subscribe(EVT_PM_DEEP_SLEEP, pm_deep_sleep_handler, NULL);
     return svc_display_init(h->lcd_io, h->lcd_panel, h->i2c_touch);
 }
 

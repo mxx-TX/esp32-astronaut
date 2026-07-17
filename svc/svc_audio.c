@@ -1,6 +1,14 @@
 #include "svc_audio.h"
 #include "freertos/FreeRTOS.h"
 #include "bsp_audio.h"
+#include "framework/svc_event.h"
+
+static void pm_deep_sleep_handler(svc_event_id_t id, void *data, void *ctx)
+{
+    (void)id; (void)data; (void)ctx;
+    /* I2S 会在深睡掉电后重新初始化，此处仅预留 */
+}
+
 esp_err_t svc_audio_play(i2s_chan_handle_t tx, const uint8_t *data, size_t len, uint32_t timeout_ms)
 {
     size_t written = 0;
@@ -18,6 +26,7 @@ esp_err_t svc_audio_set_vol(i2c_master_dev_handle_t dac, int pct)
 static esp_err_t svc_audio_on_init(svc_base_t *svc, void *ctx)
 {
     (void)svc; (void)ctx;
+    svc_event_subscribe(EVT_PM_DEEP_SLEEP, pm_deep_sleep_handler, NULL);
     return ESP_OK;
 }
 

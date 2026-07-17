@@ -10,6 +10,10 @@ typedef enum {
     EVT_NETWORK_DOWN,
     EVT_WIFI_PROV_STARTED,
     EVT_WIFI_CONNECTING,
+    EVT_PM_IDLE,
+    EVT_PM_SLEEP,
+    EVT_PM_WAKE,
+    EVT_PM_DEEP_SLEEP,
     EVT_USER = 100,
 } svc_event_id_t;
 

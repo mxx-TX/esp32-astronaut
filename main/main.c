@@ -1,6 +1,9 @@
 #include <stdio.h>
+#include <stddef.h>
 #include "esp_log.h"
 #include "esp_system.h"
+#include "esp_sleep.h"
+#include "esp_rom_crc.h"
 #include "nvs_flash.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -14,6 +17,7 @@
 #include "svc_audio.h"
 #include "svc_time.h"
 #include "svc_pm.h"
+#include "svc_pm_rtc.h"
 #include "svc_ota.h"
 #include "app_fsm.h"
 #include "app_pipeline.h"
@@ -32,6 +36,21 @@ void app_main(void)
         nvs_flash_erase();
         nvs_flash_init();
     }
+
+    /* 妫€娴嬫繁搴︾潯鐪犲敜閱?*/
+    bool deep_sleep_wake = false;
+    if (esp_sleep_get_wakeup_causes() & BIT(ESP_SLEEP_WAKEUP_EXT0)
+        && g_pm_rtc.magic == PM_RTC_MAGIC) {
+        uint32_t calc_crc = esp_rom_crc32_le(UINT32_MAX,
+            (const uint8_t *)&g_pm_rtc,
+            offsetof(pm_rtc_data_t, crc32));
+        if (g_pm_rtc.crc32 == calc_crc) {
+            deep_sleep_wake = true;
+            ESP_LOGI(TAG, "Deep sleep wakeup (cnt=%lu)",
+                     (unsigned long)g_pm_rtc.wakeup_count);
+        }
+    }
+    g_pm_rtc.magic = 0;
 
     ESP_LOGI(TAG, "========== BSP Init ==========");
     ret = bsp_board_init(&h);
@@ -59,6 +78,10 @@ void app_main(void)
     app_fsm_init();
     app_pipeline_init(h.i2s_tx, h.i2s_rx);
     app_fsm_post_event(APP_EVT_BOOT_DONE);
+
+    if (deep_sleep_wake) {
+        ESP_LOGI(TAG, "Restored from deep sleep");
+    }
 
     ESP_LOGI(TAG, "Ready.");
 
