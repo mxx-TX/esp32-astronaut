@@ -1,4 +1,5 @@
 #include "app_fsm.h"
+#include "app_gui.h"
 #include "os_queue.h"
 #include "esp_log.h"
 static const char *TAG = "app_fsm";
@@ -39,6 +40,7 @@ static void fsm_transition(app_event_t evt)
         if (evt == APP_EVT_TTS_DONE || evt == APP_EVT_TIMEOUT) s_state = APP_STATE_IDLE;
         break;
     }
+    app_gui_update_state(s_state);
 }
 void app_fsm_task(void *arg)
 {

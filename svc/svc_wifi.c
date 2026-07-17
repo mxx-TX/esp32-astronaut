@@ -24,15 +24,12 @@
 
 static const char *TAG = "svc_wifi";
 
-/* ---- 常量 ---- */
 
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
 
 #define AP_SSID  "Astronaut_Setup"
 #define AP_IP    "192.168.4.1"
-
-/* ---- 静态状态 ---- */
 
 static bool s_connected = false;
 static svc_wifi_cb_t s_cb = NULL;
@@ -265,6 +262,8 @@ static void start_ap(void)
 
 static bool try_sta_connect(const char *ssid, const char *pass)
 {
+    ESP_LOGI(TAG, "connecting to [%s]", ssid);
+    svc_event_publish(EVT_WIFI_CONNECTING, (void *)ssid);
     esp_wifi_stop();
     esp_wifi_set_mode(WIFI_MODE_STA);
 
@@ -273,6 +272,7 @@ static bool try_sta_connect(const char *ssid, const char *pass)
     strncpy((char *)cfg.sta.password, pass, 64);
     esp_wifi_set_config(WIFI_IF_STA, &cfg);
     esp_wifi_start();
+    esp_wifi_connect();
 
     EventBits_t bits = xEventGroupWaitBits(s_evt,
         WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
@@ -281,6 +281,7 @@ static bool try_sta_connect(const char *ssid, const char *pass)
     if (bits & WIFI_CONNECTED_BIT) {
         save_creds_to_nvs(ssid, pass);
         provision_complete(true);
+        svc_event_publish(EVT_NETWORK_UP, NULL);
         return true;
     }
     return false;
@@ -378,6 +379,7 @@ static esp_err_t http_post_connect_handler(httpd_req_t *req)
     start_ap();
     start_http_server();
     register_connect_uri();
+    svc_event_publish(EVT_WIFI_PROV_STARTED, NULL);
     return ESP_OK;
 }
 
@@ -405,6 +407,7 @@ static void ble_cred_callback(const char *ssid, const char *pass)
     start_ap();
     start_http_server();
     register_connect_uri();
+    svc_event_publish(EVT_WIFI_PROV_STARTED, NULL);
 }
 
 /* ================================================================
@@ -420,12 +423,17 @@ static void event_handler(void *arg, esp_event_base_t base,
         if (id == WIFI_EVENT_STA_START) {
             if (!s_provisioning) esp_wifi_connect();
         } else if (id == WIFI_EVENT_STA_DISCONNECTED) {
+            wifi_event_sta_disconnected_t *ev = (wifi_event_sta_disconnected_t *)data;
+            ESP_LOGW(TAG, "STA disconnect reason=%d", ev ? ev->reason : -1);
             s_connected = false;
             if (!s_provisioning) {
                 if (s_cb) s_cb(false);
                 svc_event_publish(EVT_WIFI_DISCONNECTED, NULL);
                 svc_event_publish(EVT_NETWORK_DOWN, NULL);
-                ESP_LOGW(TAG, "WiFi disconnected, retry...");
+                wifi_config_t wcfg;
+                esp_wifi_get_config(WIFI_IF_STA, &wcfg);
+                ESP_LOGW(TAG, "WiFi disconnected, retry SSID=[%s] reason=%d", wcfg.sta.ssid, ev->reason);
+                svc_event_publish(EVT_WIFI_CONNECTING, NULL);
                 esp_wifi_connect();
             }
         }
@@ -470,6 +478,7 @@ esp_err_t svc_wifi_connect(const char *ssid, const char *pass,
     strncpy((char *)cfg.sta.password, pass, 64);
     esp_wifi_set_config(WIFI_IF_STA, &cfg);
     esp_wifi_start();
+    svc_event_publish(EVT_WIFI_CONNECTING, NULL);
     EventBits_t bits = xEventGroupWaitBits(s_evt,
         WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
         pdFALSE, pdFALSE, pdMS_TO_TICKS(15000));
@@ -559,3 +568,8 @@ svc_base_t g_svc_wifi = {
     .on_stop = NULL,
     .on_deinit = NULL,
 };
+
+const char *svc_wifi_get_prov_pin(void)
+{
+    return s_prov_pin;
+}

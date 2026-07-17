@@ -13,6 +13,9 @@ esp_err_t svc_wifi_start_provisioning(svc_wifi_prov_cb_t cb);
 esp_err_t svc_wifi_stop_provisioning(void);
 bool svc_wifi_is_provisioning(void);
 
+// 获取配网 PIN 码
+const char *svc_wifi_get_prov_pin(void);
+
 extern svc_base_t g_svc_wifi;
 
 #endif

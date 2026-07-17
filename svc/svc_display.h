@@ -2,15 +2,15 @@
 #define SVC_DISPLAY_H
 #include "framework/svc_manager.h"
 #include "esp_err.h"
+#include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_ops.h"
+#include "esp_lcd_touch.h"
 #include "bsp_touch.h"
 #include "lvgl.h"
 #include <stdbool.h>
 
 extern svc_base_t g_svc_display;
 
-esp_err_t svc_display_init(esp_lcd_panel_handle_t panel, i2c_master_dev_handle_t touch_dev);
-void svc_display_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map);
-void svc_display_touch_read(lv_indev_t *indev, lv_indev_data_t *data);
+esp_err_t svc_display_init(esp_lcd_panel_io_handle_t io, esp_lcd_panel_handle_t panel, esp_lcd_touch_handle_t touch_dev);
 esp_err_t svc_display_set_backlight(uint8_t pct);
 #endif

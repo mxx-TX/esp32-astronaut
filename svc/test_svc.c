@@ -31,6 +31,7 @@ static esp_err_t test_async_work(void *arg)
     return ESP_OK;
 }
 
+/* ========== audio beep test ========== */
 static void test_audio_beep(bsp_handles_t *h)
 {
 #define BEEP_FREQ   440
@@ -38,7 +39,7 @@ static void test_audio_beep(bsp_handles_t *h)
 #define BEEP_MS     600
 #define BEEP_SAMPS  (BEEP_RATE * BEEP_MS / 1000)
 
-    ESP_LOGI(TAG, "--- Audio Beep Test (440Hz, %dms) ---", BEEP_MS);
+    ESP_LOGI(TAG, "========== Audio Beep Test (440Hz, %dms) ==========", BEEP_MS);
 
     int frame_bytes = BEEP_SAMPS * 4;
     int16_t *buf = malloc(frame_bytes);
@@ -64,7 +65,7 @@ static void test_audio_beep(bsp_handles_t *h)
     free(buf);
 }
 
-/* 找 16bit PCM 数据的最大最小值 */
+/* ========== find max/min in 16bit PCM ========== */
 static void codec_max_sample(const uint8_t *data, int size, int *max_val, int *min_val)
 {
     const int16_t *s = (const int16_t *)data;
@@ -78,13 +79,13 @@ static void codec_max_sample(const uint8_t *data, int size, int *max_val, int *m
     *min_val = min;
 }
 
-/* 实时回声环回：MIC -> Speaker，10 秒 */
+/* ========== audio loopback: MIC -> Speaker ========== */
 static void test_audio_loopback(bsp_handles_t *h)
 {
-#define REC_MS          500
+#define REC_MS          3000
 #define CHUNK_SIZE      512
 
-    ESP_LOGI(TAG, "--- Audio Record & Playback (500ms loop) ---");
+    ESP_LOGI(TAG, "========== Audio Record 3s & Playback ==========");
 
     int total_bytes = REC_MS * 48000 * 4 / 1000;
     uint8_t *rec = malloc(total_bytes);
@@ -94,12 +95,12 @@ static void test_audio_loopback(bsp_handles_t *h)
 
     svc_audio_set_vol(h->i2c_dac, 60);
     os_task_delay_ms(50);
-    for (int loop = 0; loop < 3; loop++) {
-    ESP_LOGI(TAG, "Loop %d: recording...", loop + 1);
+
+    ESP_LOGI(TAG, "recording %d ms...", REC_MS);
     int recd = 0;
     while (recd < total_bytes) {
         size_t read = 0;
-        esp_err_t ret = svc_audio_record(h->i2s_rx, chunk, CHUNK_SIZE, &read, 1000);
+        esp_err_t ret = svc_audio_record(h->i2s_rx, chunk, CHUNK_SIZE, &read, 5000);
         if (ret != ESP_OK) { ESP_LOGE(TAG, "record fail: 0x%x", ret); break; }
         if (read == 0) { continue; }
         if (recd + (int)read <= total_bytes) {
@@ -110,23 +111,21 @@ static void test_audio_loopback(bsp_handles_t *h)
 
     int max_s, min_s;
     codec_max_sample(rec, recd, &max_s, &min_s);
-    ESP_LOGI(TAG, "  recorded %d bytes, range [%d, %d]", recd, min_s, max_s);
+    ESP_LOGI(TAG, "recorded %d bytes, range [%d, %d]", recd, min_s, max_s);
 
-    ESP_LOGI(TAG, "  playing...");
+    ESP_LOGI(TAG, "playing back...");
     int played = 0;
     while (played < recd) {
         int left = recd - played;
         int now = (left > CHUNK_SIZE) ? CHUNK_SIZE : left;
-        esp_err_t ret = svc_audio_play(h->i2s_tx, rec + played, now, 2000);
+        esp_err_t ret = svc_audio_play(h->i2s_tx, rec + played, now, 5000);
         if (ret != ESP_OK) { ESP_LOGE(TAG, "play fail: 0x%x", ret); break; }
         played += now;
     }
 
-    }
-
     free(chunk);
     free(rec);
-    ESP_LOGI(TAG, "--- Record & Playback done (3 loops) ---");
+    ESP_LOGI(TAG, "========== Record & Playback done ==========");
 }
 
 esp_err_t test_svc_run_all(bsp_handles_t *h)
@@ -153,7 +152,7 @@ esp_err_t test_svc_run_all(bsp_handles_t *h)
     test_audio_beep(h);
     test_audio_loopback(h);
 
-    ESP_LOGI(TAG, "--- Framework Tests ---");
+    ESP_LOGI(TAG, "========== Framework Tests ==========");
     svc_event_subscribe(EVT_USER, test_event_handler, NULL);
     svc_event_publish(EVT_USER, NULL);
     T_CHECK("event pub/sub", s_evt_test_ok ? ESP_OK : ESP_FAIL);

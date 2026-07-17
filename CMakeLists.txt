@@ -9,4 +9,4 @@ set(EXTRA_COMPONENT_DIRS ${CMAKE_CURRENT_LIST_DIR}/bsp
                          ${CMAKE_CURRENT_LIST_DIR}/drv)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(esp32s3-astronaut)
+project(esp32s3-astronaut VERSION 0.1.0)

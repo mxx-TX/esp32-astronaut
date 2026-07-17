@@ -2,11 +2,12 @@
 #include "bsp_lcd.h"
 #include "bsp_touch.h"
 #include "bsp_led.h"
-#include "bsp_sdcard.h"
 #include "bsp_audio.h"
+#include "bsp_board_cfg.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <sys/stat.h>
 static const char *TAG = "test_bsp";
 #define T_CHECK(name, expr) do { esp_err_t r = (expr); ESP_LOGI(TAG, "[%s] %s", (r == ESP_OK) ? "PASS" : "FAIL", name); } while(0)
 esp_err_t test_bsp_run_all(bsp_handles_t *h)
@@ -31,8 +32,8 @@ esp_err_t test_bsp_run_all(bsp_handles_t *h)
         ESP_LOGW(TAG, "[WARN] Touch read fail (no HW?): 0x%x", tr);
     }
 
-    esp_err_t sr = bsp_sdcard_init();
-    if (sr == ESP_OK) {
+    struct stat st;
+    if (stat(BSP_SD_MOUNT_POINT, &st) == 0 && S_ISDIR(st.st_mode)) {
         ESP_LOGI(TAG, "[PASS] SD card mounted");
     } else {
         ESP_LOGW(TAG, "[WARN] SD card fail (no card?)");

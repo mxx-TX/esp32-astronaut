@@ -15,16 +15,13 @@ static const char *TAG = "bsp_board";
 
 static void power_gpio_init(void)
 {
-    gpio_config_t cfg_lcd = { .pin_bit_mask = (1ULL << BSP_GPIO_LCD_EN),   .mode = GPIO_MODE_OUTPUT };
-    gpio_config_t cfg_pa  = { .pin_bit_mask = (1ULL << BSP_GPIO_PA_EN),    .mode = GPIO_MODE_OUTPUT };
-    gpio_config(&cfg_lcd); gpio_set_level(BSP_GPIO_LCD_EN, 1);
+    gpio_config_t cfg_lcd = {
+        .pin_bit_mask = (1ULL << BSP_GPIO_LCD_EN),
+        .mode = GPIO_MODE_OUTPUT,
+    };
+    gpio_config(&cfg_lcd); gpio_set_level(BSP_GPIO_LCD_EN, 0);
+    gpio_config_t cfg_pa  = { .pin_bit_mask = (1ULL << BSP_GPIO_PA_EN), .mode = GPIO_MODE_OUTPUT };
     gpio_config(&cfg_pa);  gpio_set_level(BSP_GPIO_PA_EN, 0);
-}
-
-esp_err_t bsp_board_lcd_power_on(void)
-{
-    gpio_set_level(BSP_GPIO_LCD_EN, 0);
-    return ESP_OK;
 }
 
 esp_err_t bsp_board_audio_power_on(void)
@@ -35,48 +32,53 @@ esp_err_t bsp_board_audio_power_on(void)
 
 esp_err_t bsp_board_init(bsp_handles_t *h)
 {
-    esp_err_t ret;
     memset(h, 0, sizeof(*h));
     power_gpio_init();
+    vTaskDelay(pdMS_TO_TICKS(100));
 
-    ESP_LOGI(TAG, "LCD power on");
-    bsp_board_lcd_power_on();
-    vTaskDelay(pdMS_TO_TICKS(50));
-
-    ESP_LOGI(TAG, "Init I2C bus");
+    // I2C master bus
     i2c_master_bus_config_t i2c_cfg = {
         .i2c_port = BSP_I2C_PORT,
         .sda_io_num = BSP_I2C_SDA,
         .scl_io_num = BSP_I2C_SCL,
         .clk_source = I2C_CLK_SRC_DEFAULT,
         .glitch_ignore_cnt = 7,
-        .flags = { .enable_internal_pullup = true },
+        .flags.enable_internal_pullup = false,
     };
-    ret = i2c_new_master_bus(&i2c_cfg, &h->i2c_bus);
-    if (ret != ESP_OK) { ESP_LOGE(TAG, "I2C bus fail"); return ret; }
+    ESP_ERROR_CHECK(i2c_new_master_bus(&i2c_cfg, &h->i2c_bus));
+    ESP_LOGI(TAG, "I2C init ok");
 
-    ESP_LOGI(TAG, "Init LCD");
-    ret = bsp_lcd_init(&h->lcd_io, &h->lcd_panel);
-    if (ret != ESP_OK) { ESP_LOGE(TAG, "LCD fail"); return ret; }
-    bsp_lcd_set_backlight(80);
+    // LCD
+    ESP_ERROR_CHECK(bsp_lcd_init(&h->lcd_io, &h->lcd_panel));
+    bsp_lcd_set_backlight(100);
+    ESP_LOGI(TAG, "LCD init ok");
 
-    ESP_LOGI(TAG, "Init Touch");
-    ret = bsp_touch_init(h->i2c_bus, &h->i2c_touch);
-    if (ret != ESP_OK) { ESP_LOGW(TAG, "Touch fail (continue)"); }
+    // Touch - optional
+    esp_err_t ret = bsp_touch_init(h->i2c_bus, &h->i2c_touch);
+    if (ret != ESP_OK) {
+        ESP_LOGW(TAG, "Touch init skip: 0x%x", ret);
+        h->i2c_touch = NULL;
+    }
 
-    ESP_LOGI(TAG, "Audio power on");
-    bsp_board_audio_power_on();
-    os_task_delay_ms(50);
+    // Audio - optional, ES8311/ES7210 可能不在板上
     ret = bsp_audio_init(h->i2c_bus, &h->i2c_dac, &h->i2c_adc, &h->i2s_tx, &h->i2s_rx);
-    if (ret != ESP_OK) { ESP_LOGW(TAG, "Audio fail (continue)"); }
+    if (ret != ESP_OK) {
+        ESP_LOGW(TAG, "Audio init skip: 0x%x", ret);
+        h->i2c_dac = NULL;
+        h->i2c_adc = NULL;
+        h->i2s_tx = NULL;
+        h->i2s_rx = NULL;
+    }
 
-    ESP_LOGI(TAG, "Init LED");
-    bsp_led_init();
-
-    ESP_LOGI(TAG, "Init SD card");
+    // SDCard - optional
     ret = bsp_sdcard_init();
-    if (ret != ESP_OK) { ESP_LOGW(TAG, "SD card fail (continue)"); }
+    if (ret != ESP_OK) {
+        ESP_LOGW(TAG, "SDCard init skip: 0x%x", ret);
+    }
 
-    ESP_LOGI(TAG, "Board init complete");
+    // LED
+    ESP_ERROR_CHECK(bsp_led_init());
+    ESP_LOGI(TAG, "LED init ok");
+
     return ESP_OK;
 }

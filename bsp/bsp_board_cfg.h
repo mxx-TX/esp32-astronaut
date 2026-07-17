@@ -14,8 +14,11 @@
 #define BSP_LCD_WIDTH           360
 #define BSP_LCD_HEIGHT          360
 
-#define BSP_TOUCH_I2C_ADDR      0x15
-#define BSP_TOUCH_I2C_SPEED     400000
+//0x15 0x2A
+#define BSP_TOUCH_I2C_ADDR      0x15   
+#define BSP_TOUCH_I2C_SPEED     100000
+#define BSP_TOUCH_INT_GPIO      10
+#define BSP_TOUCH_RST_GPIO      -1
 
 #define BSP_AUDIO_DAC_ADDR      0x18
 #define BSP_AUDIO_ADC_ADDR      0x40

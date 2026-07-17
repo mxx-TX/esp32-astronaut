@@ -226,14 +226,14 @@ static esp_err_t es8311_init_codec(i2c_master_dev_handle_t dev)
         ESP_LOGI(TAG, "ES8311 chip ID: 0x%02X", regv);
     }
 
-    /* 回读关键寄存器验证 */
-    uint8_t regs[] = {0x00, 0x01, 0x09, 0x0A, 0x0D, 0x0E, 0x12, 0x14, 0x31, 0x32};
-    for (int i = 0; i < sizeof(regs); i++) {
-        ret = es8311_read_reg(dev, regs[i], &regv);
-        if (ret == ESP_OK) {
-            ESP_LOGI(TAG, "  REG 0x%02X = 0x%02X", regs[i], regv);
-        }
-    }
+    // /* 回读关键寄存器验证 */
+    // uint8_t regs[] = {0x00, 0x01, 0x09, 0x0A, 0x0D, 0x0E, 0x12, 0x14, 0x31, 0x32};
+    // for (int i = 0; i < sizeof(regs); i++) {
+    //     ret = es8311_read_reg(dev, regs[i], &regv);
+    //     if (ret == ESP_OK) {
+    //         ESP_LOGI(TAG, "  REG 0x%02X = 0x%02X", regs[i], regv);
+    //     }
+    // }
     ESP_LOGI(TAG, "ES8311 init done");
     return ESP_OK;
 

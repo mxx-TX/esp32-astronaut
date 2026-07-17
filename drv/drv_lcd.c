@@ -208,7 +208,7 @@ esp_err_t drv_lcd_init(const drv_lcd_cfg_t *cfg, esp_lcd_panel_io_handle_t *out_
         .sclk_io_num = cfg->sclk,
         .quadwp_io_num = cfg->quadwp,
         .quadhd_io_num = cfg->quadhd,
-        .max_transfer_sz = 7200,
+        .max_transfer_sz = 360 * 72 * 2,
         .flags = SPICOMMON_BUSFLAG_MASTER,
     };
     esp_err_t ret = spi_bus_initialize(cfg->spi_host, &bus_cfg, SPI_DMA_CH_AUTO);
@@ -216,7 +216,7 @@ esp_err_t drv_lcd_init(const drv_lcd_cfg_t *cfg, esp_lcd_panel_io_handle_t *out_
 
     esp_lcd_panel_io_spi_config_t io_cfg = {
         .cs_gpio_num = cfg->cs,
-        .dc_gpio_num = cfg->dc,
+        .dc_gpio_num = -1,
         .spi_mode = 0,
         .pclk_hz = 40 * 1000 * 1000,
         .trans_queue_depth = 10,
@@ -232,7 +232,7 @@ esp_err_t drv_lcd_init(const drv_lcd_cfg_t *cfg, esp_lcd_panel_io_handle_t *out_
         .rgb_ele_order = LCD_RGB_ELEMENT_ORDER_RGB,
         .bits_per_pixel = 16,
         .vendor_config = (void *)&vendor_cfg,
-        .flags = { .reset_active_high = true },
+        .flags = { .reset_active_high = false },
     };
     ret = esp_lcd_new_panel_st77916(*out_io, &panel_cfg, out_panel);
     if (ret != ESP_OK) { ESP_LOGE(TAG, "panel new fail: 0x%x", ret); goto err_io; }
