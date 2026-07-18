@@ -8,8 +8,12 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <sys/stat.h>
-static const char *TAG = "test_bsp";
+
 #define T_CHECK(name, expr) do { esp_err_t r = (expr); ESP_LOGI(TAG, "[%s] %s", (r == ESP_OK) ? "PASS" : "FAIL", name); } while(0)
+
+static const char *TAG = "test_bsp";
+
+
 esp_err_t test_bsp_run_all(bsp_handles_t *h)
 {
     ESP_LOGI(TAG, "========== BSP Test Suite ==========");

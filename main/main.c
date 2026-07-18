@@ -37,7 +37,6 @@ void app_main(void)
         nvs_flash_init();
     }
 
-    /* 妫€娴嬫繁搴︾潯鐪犲敜閱?*/
     bool deep_sleep_wake = false;
     if (esp_sleep_get_wakeup_causes() & BIT(ESP_SLEEP_WAKEUP_EXT0)
         && g_pm_rtc.magic == PM_RTC_MAGIC) {
